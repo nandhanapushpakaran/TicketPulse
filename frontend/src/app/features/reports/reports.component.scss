@@ -1,0 +1,108 @@
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.filter-card {
+  padding: 1rem 1.25rem;
+
+  .filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+
+    .filter-item {
+      flex: 1;
+      min-width: 140px;
+
+      label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+      }
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+}
+
+.reports-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.breakdown-item {
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+
+    .label {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .value {
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+  }
+
+  .progress-bar-track {
+    height: 8px;
+    background-color: #f1f5f9;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background-color: var(--primary);
+      transition: width 0.4s ease;
+
+      &.danger { background-color: var(--danger); }
+      &.warning { background-color: var(--warning); }
+      &.category { background: linear-gradient(90deg, #10b981, #06b6d4); }
+      &.status { background: linear-gradient(90deg, #6366f1, #3b82f6); }
+    }
+  }
+}

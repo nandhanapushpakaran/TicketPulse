@@ -1,0 +1,138 @@
+<div class="users-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Enterprise User Management</h1>
+      <p class="page-subtitle">View system users, assign support agent roles, and manage permissions</p>
+    </div>
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="tp-card filter-card">
+    <div class="filter-grid">
+      <div class="filter-item search">
+        <input
+          type="text"
+          class="tp-input"
+          placeholder="Search users by name or email..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <div class="filter-item">
+        <select class="tp-select" [(ngModel)]="selectedRole" (change)="applyFilters()">
+          <option value="">All Roles</option>
+          <option value="USER">User</option>
+          <option value="AGENT">Support Agent</option>
+          <option value="ADMIN">Administrator</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="tp-btn tp-btn-primary tp-btn-sm" (click)="applyFilters()">Filter</button>
+        <button class="tp-btn tp-btn-secondary tp-btn-sm" (click)="resetFilters()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="tp-loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading enterprise directory...</p>
+  </div>
+
+  <!-- Users Table -->
+  <div *ngIf="!loading() && users().length > 0" class="tp-table-container">
+    <table class="tp-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email Address</th>
+          <th>System Role</th>
+          <th>Account Status</th>
+          <th>Joined Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of users()">
+          <td>
+            <div class="user-row-meta">
+              <div class="user-avatar-sm">
+                {{ u.first_name ? u.first_name.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase() }}
+              </div>
+              <span class="user-full-name">{{ u.full_name }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="email-text">{{ u.email }}</span>
+          </td>
+          <td>
+            <span class="tp-badge" [ngClass]="'role-' + u.role.toLowerCase()">
+              {{ u.role }}
+            </span>
+          </td>
+          <td>
+            <span class="status-pill" [class.active]="u.is_active" [class.inactive]="!u.is_active">
+              {{ u.is_active ? 'Active' : 'Disabled' }}
+            </span>
+          </td>
+          <td>
+            <span class="date-text">{{ u.created_at | date:'mediumDate' }}</span>
+          </td>
+          <td>
+            <button class="tp-btn tp-btn-secondary tp-btn-sm" (click)="openEditModal(u)">
+              Edit Role
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Edit User Role Modal -->
+  <div class="modal-backdrop" *ngIf="selectedUser() as user">
+    <div class="tp-card modal-card">
+      <div class="modal-header">
+        <h3>Manage User Role & Access</h3>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="user-target-text">
+          Modifying privileges for <strong>{{ user.full_name }}</strong> ({{ user.email }})
+        </p>
+
+        <div *ngIf="modalError()" class="tp-alert error" style="margin-bottom: 1rem;">
+          <span>{{ modalError() }}</span>
+        </div>
+
+        <div class="tp-form-group">
+          <label for="roleSelect">System Role</label>
+          <select id="roleSelect" class="tp-select" [(ngModel)]="modalRole">
+            <option value="USER">USER - Standard Support Requester</option>
+            <option value="AGENT">AGENT - Support Staff / Resolver</option>
+            <option value="ADMIN">ADMIN - Full System Administrator</option>
+          </select>
+        </div>
+
+        <div class="tp-form-group checkbox-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="modalActive" />
+            <span>Account Active (Allowed to sign in)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="tp-btn tp-btn-secondary tp-btn-sm" (click)="closeModal()" [disabled]="modalSaving()">
+          Cancel
+        </button>
+        <button class="tp-btn tp-btn-primary tp-btn-sm" (click)="saveUserChanges()" [disabled]="modalSaving()">
+          <span>{{ modalSaving() ? 'Saving Changes...' : 'Save Privileges' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
