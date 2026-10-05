@@ -1,0 +1,25 @@
+.tp-app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.tp-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--bg-page);
+}
+
+.tp-content-body {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}

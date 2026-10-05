@@ -1,0 +1,79 @@
+<div class="auth-page">
+  <div class="auth-card tp-card">
+    <div class="auth-header">
+      <div class="brand-badge">
+        <span class="pulse-dot-cyan"></span>
+        <span class="badge-text">TicketPulse</span>
+      </div>
+      <h2>Enterprise Sign In</h2>
+      <p class="subtitle">Access your support operations command center</p>
+    </div>
+
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage()" class="tp-alert error">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ errorMessage() }}</span>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="tp-form-group">
+        <label for="email">Work Email</label>
+        <input
+          id="email"
+          type="email"
+          class="tp-input"
+          [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          formControlName="email"
+          placeholder="name@company.com"
+        />
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="tp-error-text">
+          A valid work email is required.
+        </div>
+      </div>
+
+      <div class="tp-form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          class="tp-input"
+          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          formControlName="password"
+          placeholder="••••••••"
+        />
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="tp-error-text">
+          Password is required (min 6 characters).
+        </div>
+      </div>
+
+      <button type="submit" class="tp-btn tp-btn-primary submit-btn" [disabled]="loading()">
+        <span *ngIf="loading()" class="spinner-inline"></span>
+        <span>{{ loading() ? 'Authenticating...' : 'Sign In' }}</span>
+      </button>
+    </form>
+
+    <!-- Quick Demo Access Bar (Interview Friendly) -->
+    <div class="demo-box">
+      <div class="demo-label">Quick Demo Access (Job Interview Showcase):</div>
+      <div class="demo-buttons">
+        <button type="button" class="demo-chip admin" (click)="fillDemo('admin@ticketpulse.local')">
+          Admin
+        </button>
+        <button type="button" class="demo-chip agent" (click)="fillDemo('agent.sarah@ticketpulse.local')">
+          Agent
+        </button>
+        <button type="button" class="demo-chip user" (click)="fillDemo('user.alex@ticketpulse.local')">
+          User
+        </button>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      <span>Don't have an account yet?</span>
+      <a routerLink="/auth/register">Create user account</a>
+    </div>
+  </div>
+</div>

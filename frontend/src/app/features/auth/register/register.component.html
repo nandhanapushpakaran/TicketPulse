@@ -1,0 +1,97 @@
+<div class="auth-page">
+  <div class="auth-card tp-card">
+    <div class="auth-header">
+      <div class="brand-badge">
+        <span class="pulse-dot-cyan"></span>
+        <span class="badge-text">TicketPulse</span>
+      </div>
+      <h2>Create Account</h2>
+      <p class="subtitle">Join TicketPulse to track and resolve support requests</p>
+    </div>
+
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage()" class="tp-alert error">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ errorMessage() }}</span>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div style="display: flex; gap: 0.75rem;">
+        <div class="tp-form-group" style="flex: 1;">
+          <label for="first_name">First Name</label>
+          <input
+            id="first_name"
+            type="text"
+            class="tp-input"
+            [class.error]="registerForm.get('first_name')?.invalid && registerForm.get('first_name')?.touched"
+            formControlName="first_name"
+            placeholder="John"
+          />
+        </div>
+        <div class="tp-form-group" style="flex: 1;">
+          <label for="last_name">Last Name</label>
+          <input
+            id="last_name"
+            type="text"
+            class="tp-input"
+            [class.error]="registerForm.get('last_name')?.invalid && registerForm.get('last_name')?.touched"
+            formControlName="last_name"
+            placeholder="Doe"
+          />
+        </div>
+      </div>
+
+      <div class="tp-form-group">
+        <label for="email">Work Email</label>
+        <input
+          id="email"
+          type="email"
+          class="tp-input"
+          [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+          formControlName="email"
+          placeholder="name@company.com"
+        />
+        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="tp-error-text">
+          A valid work email is required.
+        </div>
+      </div>
+
+      <div class="tp-form-group">
+        <label for="password">Password (min 8 characters)</label>
+        <input
+          id="password"
+          type="password"
+          class="tp-input"
+          [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+          formControlName="password"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <div class="tp-form-group">
+        <label for="password_confirm">Confirm Password</label>
+        <input
+          id="password_confirm"
+          type="password"
+          class="tp-input"
+          [class.error]="registerForm.get('password_confirm')?.invalid && registerForm.get('password_confirm')?.touched"
+          formControlName="password_confirm"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <button type="submit" class="tp-btn tp-btn-primary submit-btn" [disabled]="loading()">
+        <span *ngIf="loading()" class="spinner-inline"></span>
+        <span>{{ loading() ? 'Creating Account...' : 'Register' }}</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Already have an account?</span>
+      <a routerLink="/auth/login">Sign in</a>
+    </div>
+  </div>
+</div>
