@@ -1,0 +1,83 @@
+<div class="ticket-create-page">
+  <div class="page-header">
+    <div>
+      <a routerLink="/tickets" class="back-link">← Back to Tickets</a>
+      <h1 class="page-title">Submit Support Ticket</h1>
+      <p class="page-subtitle">Provide details so our support team can diagnose and resolve your issue</p>
+    </div>
+  </div>
+
+  <div class="tp-card form-card">
+    <div *ngIf="errorMessage()" class="tp-alert error">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ errorMessage() }}</span>
+    </div>
+
+    <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+      <!-- Title -->
+      <div class="tp-form-group">
+        <label for="title">Ticket Subject / Title *</label>
+        <input
+          id="title"
+          type="text"
+          class="tp-input"
+          [class.error]="ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched"
+          formControlName="title"
+          placeholder="e.g. Cannot connect to staging database via VPN"
+        />
+        <div *ngIf="ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched" class="tp-error-text">
+          A descriptive title (min 5 characters) is required.
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Category -->
+        <div class="tp-form-group" style="flex: 1;">
+          <label for="category">Category *</label>
+          <select id="category" class="tp-select" formControlName="category">
+            <option *ngFor="let cat of categories" [value]="cat.value">
+              {{ cat.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Priority -->
+        <div class="tp-form-group" style="flex: 1;">
+          <label for="priority">Priority *</label>
+          <select id="priority" class="tp-select" formControlName="priority">
+            <option *ngFor="let prio of priorities" [value]="prio.value">
+              {{ prio.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="tp-form-group">
+        <label for="description">Detailed Description *</label>
+        <textarea
+          id="description"
+          rows="6"
+          class="tp-textarea"
+          [class.error]="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched"
+          formControlName="description"
+          placeholder="Please describe the steps to reproduce, error codes observed, affected systems, and urgency..."
+        ></textarea>
+        <div *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched" class="tp-error-text">
+          Detailed description is required (min 10 characters).
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <a routerLink="/tickets" class="tp-btn tp-btn-secondary">Cancel</a>
+        <button type="submit" class="tp-btn tp-btn-primary" [disabled]="loading()">
+          <span *ngIf="loading()" class="spinner-inline"></span>
+          <span>{{ loading() ? 'Submitting Ticket...' : 'Create Ticket' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

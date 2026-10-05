@@ -1,0 +1,194 @@
+<div class="ticket-detail-page">
+  <!-- Top Navigation & Back -->
+  <div class="detail-nav">
+    <a routerLink="/tickets" class="back-link">← Back to All Tickets</a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="tp-loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading ticket details...</p>
+  </div>
+
+  <!-- Main Detail View -->
+  <div class="detail-container" *ngIf="!loading() && ticket() as t">
+
+    <!-- Alerts -->
+    <div *ngIf="actionMessage()" class="tp-alert success" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857;">
+      <span>✓ {{ actionMessage() }}</span>
+    </div>
+    <div *ngIf="actionError()" class="tp-alert error">
+      <span>⚠️ {{ actionError() }}</span>
+    </div>
+
+    <!-- Ticket Header Card -->
+    <div class="tp-card ticket-summary-card">
+      <div class="summary-top">
+        <div class="ticket-id-tag">{{ t.ticket_number }}</div>
+        <div class="summary-badges">
+          <span class="category-pill">{{ t.category }}</span>
+          <app-priority-badge [priority]="t.priority"></app-priority-badge>
+          <app-status-badge [status]="t.status"></app-status-badge>
+        </div>
+      </div>
+
+      <h1 class="ticket-main-title">{{ t.title }}</h1>
+
+      <div class="description-box">
+        <div class="desc-label">DESCRIPTION</div>
+        <p class="desc-content">{{ t.description }}</p>
+      </div>
+
+      <!-- Quick Action Toolbar for Staff / Users -->
+      <div class="action-toolbar">
+        <!-- Self Assign / Claim (Agents/Admins) -->
+        <button
+          *ngIf="authService.isSupportStaff() && (!t.assigned_to || t.assigned_to.id !== authService.currentUser()?.id)"
+          class="tp-btn tp-btn-primary tp-btn-sm"
+          (click)="onClaimTicket()"
+          [disabled]="actionLoading()"
+        >
+          Claim Ticket
+        </button>
+
+        <!-- Status Transition Dropdown -->
+        <div class="action-dropdown-group" *ngIf="getAllowedStatuses().length > 0">
+          <label>Update Status:</label>
+          <select class="tp-select tp-select-sm" #statusSelect (change)="onStatusChange(statusSelect.value); statusSelect.value=''">
+            <option value="">Select transition...</option>
+            <option *ngFor="let s of getAllowedStatuses()" [value]="s">
+              Move to {{ s }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Priority Change (Staff only) -->
+        <div class="action-dropdown-group" *ngIf="authService.isSupportStaff()">
+          <label>Priority:</label>
+          <select class="tp-select tp-select-sm" #prioritySelect (change)="onPriorityChange(prioritySelect.value); prioritySelect.value=''">
+            <option value="">Change priority...</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        </div>
+
+        <!-- Reassign Agent (Staff only) -->
+        <div class="action-dropdown-group" *ngIf="authService.isSupportStaff() && agents().length > 0">
+          <label>Assign To:</label>
+          <select class="tp-select tp-select-sm" #agentSelect (change)="onAssignAgent(agentSelect.value); agentSelect.value=''">
+            <option value="">Reassign agent...</option>
+            <option *ngFor="let a of agents()" [value]="a.id">
+              {{ a.full_name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span class="meta-title">SUBMITTED BY</span>
+        <span class="meta-value">{{ t.created_by.full_name }}</span>
+        <span class="meta-sub">{{ t.created_by.email }}</span>
+      </div>
+
+      <div class="meta-item">
+        <span class="meta-title">ASSIGNED AGENT</span>
+        <span class="meta-value" *ngIf="t.assigned_to">{{ t.assigned_to.full_name }}</span>
+        <span class="meta-sub" *ngIf="t.assigned_to">{{ t.assigned_to.email }}</span>
+        <span class="meta-value unassigned" *ngIf="!t.assigned_to">Unassigned</span>
+      </div>
+
+      <div class="meta-item">
+        <span class="meta-title">CREATED DATE</span>
+        <span class="meta-value">{{ t.created_at | date:'medium' }}</span>
+      </div>
+
+      <div class="meta-item">
+        <span class="meta-title">LAST UPDATED</span>
+        <span class="meta-value">{{ t.updated_at | date:'medium' }}</span>
+        <span class="meta-sub" *ngIf="t.resolved_at">Resolved: {{ t.resolved_at | date:'short' }}</span>
+      </div>
+    </div>
+
+    <!-- 2 Column Layout: Comments vs History -->
+    <div class="content-columns">
+
+      <!-- Left Column: Comments Conversation -->
+      <div class="tp-card comments-card">
+        <div class="card-header">
+          <h3>Ticket Conversation ({{ comments().length }})</h3>
+          <span class="card-sub">Chronological message stream</span>
+        </div>
+
+        <!-- Add Comment Box -->
+        <div class="comment-input-box">
+          <textarea
+            class="tp-textarea"
+            rows="3"
+            placeholder="Type your response or update..."
+            [(ngModel)]="newCommentText"
+          ></textarea>
+          <div class="comment-input-footer">
+            <button
+              class="tp-btn tp-btn-primary tp-btn-sm"
+              [disabled]="commentSubmitting() || !newCommentText.trim()"
+              (click)="onAddComment()"
+            >
+              <span>{{ commentSubmitting() ? 'Posting...' : 'Post Comment' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Comments Stream -->
+        <div class="comments-stream">
+          <div *ngIf="comments().length === 0" class="tp-empty-state" style="padding: 1.5rem 0;">
+            <p>No comments on this ticket yet. Add a response above.</p>
+          </div>
+
+          <div class="comment-bubble" *ngFor="let c of comments()">
+            <div class="comment-avatar">
+              {{ c.author.first_name ? c.author.first_name.charAt(0).toUpperCase() : c.author.email.charAt(0).toUpperCase() }}
+            </div>
+            <div class="comment-body">
+              <div class="comment-header">
+                <span class="comment-author">{{ c.author.full_name }}</span>
+                <span class="tp-badge role-badge" [ngClass]="'role-' + c.author.role.toLowerCase()">
+                  {{ c.author.role }}
+                </span>
+                <span class="comment-time">{{ c.created_at | date:'medium' }}</span>
+              </div>
+              <div class="comment-text">{{ c.text }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Audit Trail / Ticket History -->
+      <div class="tp-card history-card">
+        <div class="card-header">
+          <h3>Activity & Audit Trail</h3>
+          <span class="card-sub">Immutable lifecycle events</span>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-item" *ngFor="let h of history()">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <span class="action-tag">{{ h.action_display }}</span>
+                <span class="timeline-time">{{ h.created_at | date:'short' }}</span>
+              </div>
+              <p class="timeline-details">{{ h.details }}</p>
+              <span class="timeline-actor" *ngIf="h.user">by {{ h.user.full_name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

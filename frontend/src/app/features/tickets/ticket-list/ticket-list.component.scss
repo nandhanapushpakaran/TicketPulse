@@ -1,0 +1,122 @@
+.tickets-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+  }
+
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+}
+
+.filter-card {
+  padding: 1rem 1.25rem;
+
+  .filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+
+    .filter-item {
+      flex: 1;
+      min-width: 140px;
+
+      &.search {
+        flex: 2;
+        min-width: 220px;
+      }
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+}
+
+.ticket-link {
+  font-weight: 700;
+  color: var(--primary);
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.ticket-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .ticket-title {
+    font-weight: 600;
+    color: var(--text-main);
+    &:hover {
+      color: var(--primary);
+    }
+  }
+
+  .ticket-category {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: capitalize;
+  }
+}
+
+.user-meta-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.agent-badge {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.unassigned-text {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.date-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background-color: #f8fafc;
+  border-top: 1px solid var(--border-color);
+
+  .page-indicator {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .pagination-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+}

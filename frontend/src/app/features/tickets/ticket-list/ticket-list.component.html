@@ -1,0 +1,164 @@
+<div class="tickets-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        {{ myTicketsOnly ? 'My Tickets' : 'Enterprise Tickets' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ totalCount() }} total tickets found
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        class="tp-btn"
+        [class.tp-btn-secondary]="!myTicketsOnly"
+        [class.tp-btn-primary]="myTicketsOnly"
+        (click)="toggleMyTickets()"
+      >
+        <span>{{ myTicketsOnly ? 'Show All Tickets' : 'Filter My Tickets' }}</span>
+      </button>
+      <a routerLink="/tickets/new" class="tp-btn tp-btn-primary">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+          <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+        </svg>
+        <span>Create Ticket</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Search & Filter Control Bar -->
+  <div class="tp-card filter-card">
+    <div class="filter-grid">
+      <!-- Search Input -->
+      <div class="filter-item search">
+        <input
+          type="text"
+          class="tp-input"
+          placeholder="Search by ID, title, or user..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <select class="tp-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+          <option value="">All Statuses</option>
+          <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Priority Filter -->
+      <div class="filter-item">
+        <select class="tp-select" [(ngModel)]="selectedPriority" (change)="applyFilters()">
+          <option value="">All Priorities</option>
+          <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-item">
+        <select class="tp-select" [(ngModel)]="selectedCategory" (change)="applyFilters()">
+          <option value="">All Categories</option>
+          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+
+      <!-- Actions -->
+      <div class="filter-actions">
+        <button class="tp-btn tp-btn-primary tp-btn-sm" (click)="applyFilters()">Filter</button>
+        <button class="tp-btn tp-btn-secondary tp-btn-sm" (click)="resetFilters()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="tp-loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading support tickets...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading() && tickets().length === 0" class="tp-card tp-empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>No tickets found</h3>
+    <p>No tickets matched your current search filters.</p>
+    <button class="tp-btn tp-btn-secondary tp-btn-sm" (click)="resetFilters()">Clear Filters</button>
+  </div>
+
+  <!-- Ticket Table -->
+  <div *ngIf="!loading() && tickets().length > 0" class="tp-table-container">
+    <table class="tp-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title & Category</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Submitted By</th>
+          <th>Assigned Agent</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of tickets()">
+          <td>
+            <a [routerLink]="['/tickets', t.id]" class="ticket-link">{{ t.ticket_number }}</a>
+          </td>
+          <td>
+            <div class="ticket-title-group">
+              <a [routerLink]="['/tickets', t.id]" class="ticket-title">{{ t.title }}</a>
+              <span class="ticket-category">{{ t.category }}</span>
+            </div>
+          </td>
+          <td>
+            <app-priority-badge [priority]="t.priority"></app-priority-badge>
+          </td>
+          <td>
+            <app-status-badge [status]="t.status"></app-status-badge>
+          </td>
+          <td>
+            <span class="user-meta-name">{{ t.created_by.full_name }}</span>
+          </td>
+          <td>
+            <span *ngIf="t.assigned_to" class="agent-badge">{{ t.assigned_to.full_name }}</span>
+            <span *ngIf="!t.assigned_to" class="unassigned-text">Unassigned</span>
+          </td>
+          <td>
+            <span class="date-text">{{ t.created_at | date:'MMM d, y' }}</span>
+          </td>
+          <td>
+            <a [routerLink]="['/tickets', t.id]" class="tp-btn tp-btn-secondary tp-btn-sm">
+              View
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-bar">
+      <span class="page-indicator">
+        Page {{ currentPage() }} of {{ totalPages }} ({{ totalCount() }} items)
+      </span>
+      <div class="pagination-buttons">
+        <button
+          class="tp-btn tp-btn-secondary tp-btn-sm"
+          [disabled]="currentPage() <= 1"
+          (click)="goToPage(currentPage() - 1)"
+        >
+          Previous
+        </button>
+        <button
+          class="tp-btn tp-btn-secondary tp-btn-sm"
+          [disabled]="currentPage() >= totalPages"
+          (click)="goToPage(currentPage() + 1)"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
