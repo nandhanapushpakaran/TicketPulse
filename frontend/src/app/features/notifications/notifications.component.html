@@ -1,0 +1,58 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Operational Notifications</h1>
+      <p class="page-subtitle">Real-time alerts, ticket assignments, status updates, and discussion mentions</p>
+    </div>
+    <div class="header-actions">
+      <button
+        class="tp-btn tp-btn-secondary tp-btn-sm"
+        [disabled]="notificationService.unreadCount() === 0"
+        (click)="markAllAsRead()"
+      >
+        Mark All as Read
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="tp-loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading notification center...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading() && notifications().length === 0" class="tp-card tp-empty-state">
+    <div class="empty-icon">🔔</div>
+    <h3>No notifications yet</h3>
+    <p>You're all caught up! New ticket assignments and updates will appear here.</p>
+  </div>
+
+  <!-- Notification List -->
+  <div class="notification-list-container" *ngIf="!loading() && notifications().length > 0">
+    <div
+      *ngFor="let item of notifications()"
+      class="tp-card notification-card"
+      [class.unread]="!item.is_read"
+      (click)="markAsRead(item)"
+    >
+      <div class="notif-badge" [class.active]="!item.is_read"></div>
+
+      <div class="notif-body">
+        <div class="notif-header">
+          <div class="notif-type-tag">{{ item.notification_type }}</div>
+          <span class="notif-time">{{ item.created_at | date:'medium' }}</span>
+        </div>
+
+        <h3 class="notif-title">{{ item.title }}</h3>
+        <p class="notif-message">{{ item.message }}</p>
+
+        <div class="notif-actions" *ngIf="item.ticket_id">
+          <a [routerLink]="['/tickets', item.ticket_id]" class="tp-btn tp-btn-secondary tp-btn-sm">
+            View Ticket {{ item.ticket_number || '#' + item.ticket_id }} →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
