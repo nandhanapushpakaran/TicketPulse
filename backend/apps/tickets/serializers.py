@@ -108,3 +108,41 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
                 f"Allowed transitions: {', '.join(instance.VALID_TRANSITIONS.get(instance.status, [])) or 'None'}."
             )
         return new_status
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Serializer for displaying comments with author details."""
+
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'ticket', 'author', 'text', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'ticket', 'author', 'created_at', 'updated_at']
+
+
+class CommentCreateSerializer(serializers.ModelSerializer):
+    """Serializer for submitting a new comment."""
+
+    class Meta:
+        model = Comment
+        fields = ['text']
+
+    def validate_text(self, value):
+        val = value.strip()
+        if not val:
+            raise serializers.ValidationError("Comment cannot be empty.")
+        return val
+
+
+class TicketHistorySerializer(serializers.ModelSerializer):
+    """Serializer for rendering chronological audit trail entries."""
+
+    user = UserSerializer(read_only=True)
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
+
+    class Meta:
+        model = TicketHistory
+        fields = ['id', 'ticket', 'user', 'action', 'action_display', 'details', 'created_at']
+        read_only_fields = ['id', 'ticket', 'user', 'action', 'action_display', 'details', 'created_at']
+

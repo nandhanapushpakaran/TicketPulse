@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from django.db import models
 from django.utils import timezone
 
-from .models import Ticket, TicketHistory
+from .models import Ticket, Comment, TicketHistory
 from .serializers import (
     TicketListSerializer,
     TicketDetailSerializer,
     TicketCreateSerializer,
     TicketUpdateSerializer,
+    CommentSerializer,
+    CommentCreateSerializer,
+    TicketHistorySerializer,
 )
 from .permissions import CanAccessTicket, CanDeleteTicket
 from apps.users.models import User
@@ -314,3 +317,67 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         serializer = TicketDetailSerializer(ticket)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated, CanAccessTicket])
+    def comments(self, request, pk=None):
+        """
+        GET /api/tickets/{id}/comments/ - List comments for the ticket.
+        POST /api/tickets/{id}/comments/ - Post a new comment to the ticket.
+        """
+        ticket = self.get_object()
+
+        if request.method == 'GET':
+            comments_qs = ticket.comments.select_related('author').order_by('created_at')
+            serializer = CommentSerializer(comments_qs, many=True)
+            return Response(serializer.data)
+
+        elif request.method == 'POST':
+            serializer = CommentCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            comment = Comment.objects.create(
+                ticket=ticket,
+                author=request.user,
+                text=serializer.validated_data['text']
+            )
+
+            # Record comment addition in audit trail
+            TicketHistory.objects.create(
+                ticket=ticket,
+                user=request.user,
+                action=TicketHistory.Action.COMMENT_ADDED,
+                details=f"Comment added by {request.user.full_name}."
+            )
+
+            # Notification routing:
+            # If commenter is ticket creator -> notify assigned agent (if any) or all staff
+            # If commenter is agent/staff -> notify ticket creator
+            if request.user == ticket.created_by:
+                if ticket.assigned_to:
+                    Notification.objects.create(
+                        recipient=ticket.assigned_to,
+                        ticket=ticket,
+                        notification_type=Notification.NotificationType.NEW_COMMENT,
+                        title=f"New comment on {ticket.ticket_number}",
+                        message=f"{request.user.full_name} commented: '{comment.text[:60]}...'"
+                    )
+            else:
+                Notification.objects.create(
+                    recipient=ticket.created_by,
+                    ticket=ticket,
+                    notification_type=Notification.NotificationType.NEW_COMMENT,
+                    title=f"New comment on {ticket.ticket_number}",
+                    message=f"{request.user.full_name} replied: '{comment.text[:60]}...'"
+                )
+
+            return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated, CanAccessTicket])
+    def history(self, request, pk=None):
+        """
+        GET /api/tickets/{id}/history/ - View chronological audit trail of ticket changes.
+        """
+        ticket = self.get_object()
+        history_qs = ticket.history.select_related('user').order_by('-created_at')
+        serializer = TicketHistorySerializer(history_qs, many=True)
+        return Response(serializer.data)
+
