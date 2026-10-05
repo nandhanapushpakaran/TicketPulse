@@ -1,0 +1,346 @@
+<div class="dashboard-page">
+  <!-- Top Welcome Banner -->
+  <div class="welcome-section" *ngIf="dashboardData() as data">
+    <div class="welcome-content">
+      <div class="command-badge">
+        <span class="pulse-dot-cyan"></span>
+        <span>COMMAND CENTER LIVE</span>
+      </div>
+      <h1 class="welcome-title">{{ greeting() }}, {{ data.user.full_name || 'Operative' }}</h1>
+      <p class="welcome-subtitle">Here's your TicketPulse support overview and real-time operations health.</p>
+    </div>
+    <div class="welcome-actions">
+      <a routerLink="/tickets/new" class="tp-btn tp-btn-primary">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+          <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+        </svg>
+        <span>New Support Ticket</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="tp-loading-spinner">
+    <div class="spinner"></div>
+    <p>Synchronizing TicketPulse Command Center telemetry...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error()" class="tp-empty-state">
+    <div class="empty-icon">⚠️</div>
+    <h3>Telemetry Error</h3>
+    <p>{{ error() }}</p>
+    <button class="tp-btn tp-btn-secondary" (click)="fetchDashboardData()">Retry Telemetry</button>
+  </div>
+
+  <!-- Main Telemetry Grid -->
+  <div class="dashboard-grid" *ngIf="!loading() && dashboardData() as data">
+
+    <!-- Row 1: Stat Cards -->
+    <div class="stats-row">
+      <app-stat-card
+        title="Total Tickets"
+        [value]="data.stats.total_tickets"
+        subtitle="All system recorded tickets"
+        variant="primary"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+      </app-stat-card>
+
+      <app-stat-card
+        title="Open Tickets"
+        [value]="data.stats.open_tickets"
+        subtitle="New & Triaged requests"
+        trend="Pending Action"
+        [trendPositive]="false"
+        variant="info"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </app-stat-card>
+
+      <app-stat-card
+        title="In Progress"
+        [value]="data.stats.in_progress_tickets"
+        subtitle="Actively being worked on"
+        variant="warning"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+      </app-stat-card>
+
+      <app-stat-card
+        title="Resolved"
+        [value]="data.stats.resolved_tickets"
+        subtitle="Successfully closed tickets"
+        trend="Closed"
+        [trendPositive]="true"
+        variant="success"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </app-stat-card>
+
+      <app-stat-card
+        title="High Priority"
+        [value]="data.stats.high_priority_tickets"
+        subtitle="Critical issues needing focus"
+        trend="Urgent"
+        [trendPositive]="false"
+        variant="danger"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+      </app-stat-card>
+    </div>
+
+    <!-- Row 2: Visual Analytics & Ticket Health -->
+    <div class="analytics-row">
+      <!-- Volume Trend Chart Card -->
+      <div class="tp-card chart-card">
+        <div class="card-header">
+          <div>
+            <h3>Ticket Volume Trend</h3>
+            <span class="card-sub">Daily ticket creation velocity over the last 14 days</span>
+          </div>
+          <span class="tp-badge status-in-progress">Live Velocity</span>
+        </div>
+
+        <div class="chart-container">
+          <div class="bars-wrapper">
+            <div class="bar-col" *ngFor="let point of data.volume_trend">
+              <div class="bar-track">
+                <div
+                  class="bar-fill"
+                  [style.height.%]="(point.count / maxVolume()) * 100"
+                  [attr.data-tooltip]="point.count + ' tickets'"
+                ></div>
+              </div>
+              <span class="bar-label">{{ point.date | date:'M/d' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ticket Health Operations Card -->
+      <div class="tp-card health-card">
+        <div class="card-header">
+          <div>
+            <h3>Ticket Health</h3>
+            <span class="card-sub">SLA & operational responsiveness</span>
+          </div>
+          <span class="health-score-badge" [ngClass]="getHealthColor(data.ticket_health.health_score)">
+            {{ data.ticket_health.health_score }}% Health Score
+          </span>
+        </div>
+
+        <div class="health-breakdown">
+          <div class="health-bar-multi">
+            <div
+              class="health-segment healthy"
+              [style.width.%]="getPercentage(data.ticket_health.healthy, data.ticket_health.total_active)"
+              title="Healthy"
+            ></div>
+            <div
+              class="health-segment attention"
+              [style.width.%]="getPercentage(data.ticket_health.needs_attention, data.ticket_health.total_active)"
+              title="Needs Attention"
+            ></div>
+            <div
+              class="health-segment critical"
+              [style.width.%]="getPercentage(data.ticket_health.critical, data.ticket_health.total_active)"
+              title="Critical"
+            ></div>
+          </div>
+
+          <div class="health-items">
+            <div class="health-item">
+              <span class="pulse-indicator healthy"></span>
+              <div class="health-meta">
+                <span class="label">Healthy</span>
+                <span class="sub">Normal SLA pace</span>
+              </div>
+              <span class="count">{{ data.ticket_health.healthy }}</span>
+            </div>
+
+            <div class="health-item">
+              <span class="pulse-indicator attention"></span>
+              <div class="health-meta">
+                <span class="label">Needs Attention</span>
+                <span class="sub">Approaching SLA target</span>
+              </div>
+              <span class="count">{{ data.ticket_health.needs_attention }}</span>
+            </div>
+
+            <div class="health-item">
+              <span class="pulse-indicator critical"></span>
+              <div class="health-meta">
+                <span class="label">Critical</span>
+                <span class="sub">Unresolved high priority</span>
+              </div>
+              <span class="count danger">{{ data.ticket_health.critical }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Status, Priority & Category Breakdowns -->
+    <div class="breakdowns-row">
+      <!-- Status Distribution -->
+      <div class="tp-card breakdown-card">
+        <div class="card-header">
+          <h3>Status Distribution</h3>
+        </div>
+        <div class="breakdown-list">
+          <div class="breakdown-row" *ngFor="let item of data.distributions.status | keyvalue">
+            <div class="row-label">
+              <app-status-badge [status]="item.key"></app-status-badge>
+            </div>
+            <div class="row-bar-track">
+              <div
+                class="row-bar-fill status-fill"
+                [style.width.%]="getPercentage(item.value, data.stats.total_tickets)"
+              ></div>
+            </div>
+            <span class="row-count">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority Breakdown -->
+      <div class="tp-card breakdown-card">
+        <div class="card-header">
+          <h3>Priority Breakdown</h3>
+        </div>
+        <div class="breakdown-list">
+          <div class="breakdown-row" *ngFor="let item of data.distributions.priority | keyvalue">
+            <div class="row-label">
+              <app-priority-badge [priority]="item.key"></app-priority-badge>
+            </div>
+            <div class="row-bar-track">
+              <div
+                class="row-bar-fill priority-fill"
+                [class.high]="item.key === 'HIGH'"
+                [style.width.%]="getPercentage(item.value, data.stats.total_tickets)"
+              ></div>
+            </div>
+            <span class="row-count">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div class="tp-card breakdown-card">
+        <div class="card-header">
+          <h3>Category Breakdown</h3>
+        </div>
+        <div class="breakdown-list">
+          <div class="breakdown-row" *ngFor="let item of data.distributions.category | keyvalue">
+            <span class="cat-tag">{{ item.key }}</span>
+            <div class="row-bar-track">
+              <div
+                class="row-bar-fill category-fill"
+                [style.width.%]="getPercentage(item.value, data.stats.total_tickets)"
+              ></div>
+            </div>
+            <span class="row-count">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: My Work & Recent Tickets -->
+    <div class="operational-row">
+      <!-- My Work -->
+      <div class="tp-card my-work-card">
+        <div class="card-header">
+          <div>
+            <h3>{{ data.my_work.title }}</h3>
+            <span class="card-sub">{{ data.my_work.count }} action items assigned</span>
+          </div>
+          <a routerLink="/tickets" [queryParams]="{ my_tickets: true }" class="view-link">View all →</a>
+        </div>
+
+        <div *ngIf="data.my_work.tickets.length === 0" class="tp-empty-state">
+          <p>No active tickets assigned to you.</p>
+        </div>
+
+        <div class="work-list" *ngIf="data.my_work.tickets.length > 0">
+          <div class="work-item" *ngFor="let t of data.my_work.tickets" [routerLink]="['/tickets', t.id]">
+            <div class="work-top">
+              <span class="t-number">{{ t.ticket_number }}</span>
+              <app-priority-badge [priority]="t.priority"></app-priority-badge>
+            </div>
+            <div class="work-title">{{ t.title }}</div>
+            <div class="work-bottom">
+              <app-status-badge [status]="t.status"></app-status-badge>
+              <span class="t-date">{{ t.created_at | date:'shortDate' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Tickets Table -->
+      <div class="tp-card recent-tickets-card">
+        <div class="card-header">
+          <div>
+            <h3>Recent Enterprise Tickets</h3>
+            <span class="card-sub">Latest support submissions</span>
+          </div>
+          <a routerLink="/tickets" class="view-link">All Tickets ({{ data.stats.total_tickets }}) →</a>
+        </div>
+
+        <div class="tp-table-container">
+          <table class="tp-table">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned Agent</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of data.recent_tickets" [routerLink]="['/tickets', t.id]" style="cursor: pointer;">
+                <td>
+                  <span class="ticket-link">{{ t.ticket_number }}</span>
+                </td>
+                <td>
+                  <span class="table-ticket-title">{{ t.title }}</span>
+                </td>
+                <td>
+                  <app-priority-badge [priority]="t.priority"></app-priority-badge>
+                </td>
+                <td>
+                  <app-status-badge [status]="t.status"></app-status-badge>
+                </td>
+                <td>
+                  <span class="agent-name" *ngIf="t.assigned_to">{{ t.assigned_to.full_name }}</span>
+                  <span class="unassigned-badge" *ngIf="!t.assigned_to">Unassigned</span>
+                </td>
+                <td>
+                  <span class="created-date">{{ t.created_at | date:'MMM d, HH:mm' }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
